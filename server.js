@@ -9,6 +9,8 @@ const cookieParser = require('cookie-parser');
 
 
 const server = express();
+ // to get access to env file
+
 
 server.use(cors())
 server.use(helmet())

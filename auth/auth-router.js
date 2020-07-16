@@ -3,10 +3,7 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const Users = require("../users/users-model")
 const restrict = require("../middleware/restrict")
- // to get access to env file
-const dotenv = require("dotenv")
 
- dotenv.config();
 
 const router = express.Router()
 

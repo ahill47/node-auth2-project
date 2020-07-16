@@ -1,32 +1,36 @@
 const jwt = require("jsonwebtoken")
 
-function restrict(role = "normal") {
+// use a scale for checking user roles since admin users
+// should still have access to normal user endpoints,
+// but normal users shouldn't have access to admin endpoints.
+const roles = [
+	"normal",
+	"admin",
+]
+
+function restrict(role) {
 	return async (req, res, next) => {
 		const authError = {
 			message: "Invalid credentials",
 		}
 
 		try {
-			// this utilizes the `cookie-parser` middleware to pull the JWT out
-			// of the cookies that were automatically sent by the client.
+			// manually pull the token that got sent from the client's cookie jar
 			const token = req.cookies.token
- 			if (!token) {
+			if (!token) {
 				return res.status(401).json(authError)
 			}
 
-			// this checks to make sure the token's signature is valid. if it is,
-			// we can trust the data in the payload and consider the user logged in.
-			// if it isn't, we know the payload may have been tampered with, and we
-			// make the user log in again.
-			jwt.verify(token, process.env.JWT_SECRET, (err, decodedPayload) => {
-				if (err || decodedPayload.userRole !== role) {
+			// checks to make sure the signature is valid and the token is not expired
+			jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+				if (err) {
 					return res.status(401).json(authError)
 				}
 
-				// we attach the decoded payload values to the request, just in case we
-				// need to access them in later middleware functions or route handlers.
-				// (to look up the user by ID, for example.)
-				req.token = decodedPayload
+				// check if the role in our token is above or equal to the required role for the endpoint
+				if (role && roles.indexOf(decoded.userRole) < roles.indexOf(role)) {
+					return res.status(401).json(authError)
+				}
 
 				next()
 			})
